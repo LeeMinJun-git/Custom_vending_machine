@@ -15,7 +15,10 @@ module top_a_b_c_d_fnd_debug (
     output wire [6:0]  seg,
     output wire [3:0]  an,
     output wire        servo_out,
-    output wire [7:0]  ja_dbg
+    output wire [7:0]  ja_dbg,
+    output wire [4:0]  ext_stock_led,
+    output wire [4:0]  ext_sugar_bar,
+    output wire [4:0]  ext_ice_bar
 );
     wire reset_n;
     wire btn_enter_pulse;
@@ -258,7 +261,22 @@ module top_a_b_c_d_fnd_debug (
     assign ice_led   = fsm_led[4:0];
     assign led_status = {1'b0, inventory_led, sugar_led, ice_led};
 
-    // Single top-level LED driver: animation owns the LEDs only in DONE.
+    // External LED outputs are status-only.
+    // They are intentionally connected before the Basys3 LED animation mux.
+    // KB-1008SR LED bars are active-high, so no inversion is applied.
+    //
+    // ext_stock_led[4:0] = inventory availability LEDs
+    // ext_sugar_bar[4:0] = sugar level LED bar
+    // ext_ice_bar[4:0]   = ice level LED bar
+    assign ext_stock_led = inventory_led;
+    assign ext_sugar_bar = sugar_led;
+    assign ext_ice_bar   = ice_led;
+
+    // Basys3 onboard LED:
+    // led[14:10] = inventory group
+    // led[9:5]   = sugar group
+    // led[4:0]   = ice group
+    // During DONE state, onboard LED shows led_anim.
     assign led_anim_active = o_done_en || flag_DONE || done_cplt_latched;
     assign led = led_anim_active ? led_anim : led_status;
 endmodule
